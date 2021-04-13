@@ -1,0 +1,91 @@
+﻿AppType=JavaFX
+Build1=Default,b4j.example
+File1=Layout1.bjl
+FileGroup1=Default Group
+Group=Default Group
+Library1=jcore
+Library2=jfx
+Library3=jserial
+Library4=jxui
+Library5=jrandomaccessfile
+NumberOfFiles=1
+NumberOfLibraries=5
+NumberOfModules=0
+Version=8.9
+@EndOfDesignText@
+#Region Project Attributes 
+	#MainFormWidth: 350
+	#MainFormHeight: 200
+#End Region
+
+Sub Process_Globals
+	Private fx As JFX
+	Private MainForm As Form
+	Private xui As XUI 
+	Private sp As Serial
+	Private astream As AsyncStreams
+	Private tmr1 As Timer
+	Private cmb1 As ComboBox
+	Private Label1 As Label
+
+	Private Pane1, Pane2 As Pane
+	Private Button1 As Button
+	Private cmbSmpl As ComboBox
+	Private cb1, cb2 As CheckBox
+End Sub
+
+Sub AppStart (Form1 As Form, Args() As String)
+	MainForm = Form1
+	MainForm.RootPane.LoadLayout("Layout1")
+	MainForm.Show
+	sp.Initialize("")
+	tmr1.Initialize("tmr1",100)
+	tmr1.Enabled=False
+	cmbSmpl.Items.AddAll(Array As String("1000", "500", "100"))
+	cmb1.Items.AddAll(sp.ListPorts)
+
+End Sub
+
+Sub cmb1_SelectedIndexChanged(Index As Int, Value As Object)
+	Try
+		sp.Open(cmb1.Value)
+		sp.SetParams(1200,8,1,0)
+		astream.Initialize(sp.GetInputStream, sp.GetOutputStream, "astream")
+		Label1.Text = "Port is Open"
+		tmr1.Enabled=True
+	Catch
+		Label1.Text = "Port is busy"
+		Log("Port error")
+	End Try
+
+End Sub
+
+Sub cmbSmpl_SelectedIndexChanged(Index As Int, Value As Object)
+	tmr1.Interval=cmbSmpl.Value
+End Sub
+
+Sub tmr1_Tick
+	If cb1.Checked = True Then sp.Dtr = False
+	If cb1.Checked = False Then sp.Dtr = True
+	If cb2.Checked = True Then sp.Rts = False
+	If cb2.Checked = False Then sp.Rts = True
+	If sp.Cts = True Then Pane1.Alpha=0
+	If sp.Dsr = True Then Pane2.Alpha=0
+	If sp.Cts = False Then Pane1.Alpha=1
+	If sp.Dsr = False Then Pane2.Alpha=1
+
+End Sub
+
+Sub AStream_NewData (Buffer() As Byte)
+
+End Sub
+
+Sub Button1_Click
+	cmb1.Items.Clear
+	cmb1.Items.AddAll(sp.ListPorts)
+End Sub
+
+Sub MainForm_Closed
+	'sp.Close
+End Sub
+
